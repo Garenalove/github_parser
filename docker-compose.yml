@@ -1,0 +1,22 @@
+version: "3.1"
+
+services:
+  github_parser:
+    image: github_parser:staging
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: github_parser
+    expose:
+      - "4000"
+    ports: 
+      - "4000:4000"
+
+  postgres:
+    image: postgres:12.4
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: github_parser
