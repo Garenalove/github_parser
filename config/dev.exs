@@ -26,7 +26,7 @@ config :github_parser, GithubParserWeb.Endpoint,
 config :github_parser, :trends,
   url: "https://hackertab.pupubird.com/repositories",
   options: [timeout: 50_000, recv_timeout: 50_000],
-  update_interval:  60 * 10 * 1000
+  update_interval: 6 * 10 * 1000
 
 config :github_parser, GithubParserWeb.Endpoint,
   live_reload: [
@@ -38,7 +38,7 @@ config :github_parser, GithubParserWeb.Endpoint,
     ]
   ]
 
-config :logger, :console, format: "[$level] $message\n"
+config :logger, :info, format: "[$level] $message\n"
 
 config :phoenix, :stacktrace_depth, 20
 

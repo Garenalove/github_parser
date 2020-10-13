@@ -23,7 +23,11 @@ defmodule GithubParser.Repositories do
   end
 
   def get_all() do
-    Repo.all(Repository)
+    from(
+      r in Repository,
+      order_by: [desc: r.daily_stars]
+    )
+    |> Repo.all()
     |> Enum.map(&Repository.to_storeable_map(&1))
   end
 
