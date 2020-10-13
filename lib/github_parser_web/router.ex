@@ -19,8 +19,12 @@ defmodule GithubParserWeb.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", GithubParserWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", GithubParserWeb do
+    pipe_through :api
+
+    get "/getRepos", ReposController, :get_all
+    get "/getRepoById", ReposController, :get_by_title
+    post "/updateRepos", ReposController, :force_update
+  end
+
 end
