@@ -11,8 +11,9 @@ config :github_parser, GithubParserWeb.Endpoint,
   live_view: [signing_salt: "DudbhR42"]
 
 config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
+  level: :debug,
+  format: "$date $time [$level] $node $metadata$message\n",
+  metadata: [:module, :pid, :request_id]
 
 config :phoenix, :json_library, Jason
 

@@ -14,10 +14,10 @@ defmodule GithubParser.Workers.Repos do
   end
 
   def init(_state) do
-    {:ok, %{timer: send_after(0)}}
+    {:ok, send_after(0)}
   end
 
-  def handle_info(:update_repos, state) do
+  def handle_info(:update_repos, _state) do
     Logger.info("starting update repos")
     case do_request() do
       {:ok, repos} ->
@@ -25,21 +25,20 @@ defmodule GithubParser.Workers.Repos do
         |> Enum.map(&convert_repo(&1))
         |> add_titles()
         |> Repositories.update()
-        |> process_result(state)
+        |> process_result()
       {:error, _reason} ->
-        send_after(@retry_interval)
-        {:noreply, state}
+        {:noreply, send_after(@retry_interval)}
     end
   end
 
-  def handle_call(:force_update, _from, %{timer: timer} = state) do
-    case Process.cancel_timer(timer, async: true) do
-      :ok ->
-        {:reply, :ok, %{timer: send_after(0)}}
+  def handle_call(:force_update, _from, timer) do
+    case Process.cancel_timer(timer) do
+      time when is_integer(time) ->
+        {:reply, :ok, send_after(0)}
 
       error ->
         Logger.error("cancel timer failed. details: #{inspect(error)}")
-        {:reply, :error, state}
+        {:reply, :error, timer}
     end
   end
 
@@ -80,15 +79,14 @@ defmodule GithubParser.Workers.Repos do
     {repos, titles}
   end
 
-  defp process_result(result, state) do
+  defp process_result(result) do
     case result do
       {:ok, _} ->
         Logger.info("repos successfully updated")
-        send_after()
-        {:noreply, state}
+        {:noreply, send_after()}
       {:error, reason} ->
         Logger.error("error for the update db process. reason: #{inspect(reason)}")
-        {:stop, reason, %{}}
+        {:stop, reason, []}
     end
   end
 end
