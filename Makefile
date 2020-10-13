@@ -37,6 +37,6 @@ run: deps
 build-image: compile-assets
 	docker build -f Dockerfile.rel -t github_parser:staging .
 
-compile-assets:
+compile-assets: deps
 	cd ./assets && npm install
 	npm run deploy --prefix ./assets

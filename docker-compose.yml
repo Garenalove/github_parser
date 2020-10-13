@@ -4,6 +4,7 @@ services:
   github_parser:
     image: github_parser:staging
     environment:
+      CREATE_DB_ON_INIT: 1
       DB_HOST: postgres
       DB_USER: postgres
       DB_PASS: postgres

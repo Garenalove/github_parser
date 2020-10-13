@@ -7,16 +7,11 @@ defmodule GithubParser.Application do
 
   def start(_type, _args) do
     children = [
-      # Start the Ecto repository
       GithubParser.Repo,
-      # Start the Telemetry supervisor
       GithubParserWeb.Telemetry,
-      # Start the PubSub system
       {Phoenix.PubSub, name: GithubParser.PubSub},
-      # Start the Endpoint (http/https)
-      GithubParserWeb.Endpoint
-      # Start a worker by calling: GithubParser.Worker.start_link(arg)
-      # {GithubParser.Worker, arg}
+      GithubParserWeb.Endpoint,
+      {GithubParser.Workers.Repos, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
