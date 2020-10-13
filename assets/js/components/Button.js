@@ -19,5 +19,5 @@ const Button = styled.button`
    
     }
 `
-export default ({ color, children }) => <Button color={color}>{children}</Button>
+export default ({ color, children, onClick }) => <Button color={color} onClick={onClick}>{children}</Button>
 

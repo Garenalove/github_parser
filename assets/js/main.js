@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from 'styled-components';
 import { RepoInfo, SearchRepo, Button } from './components'
 import { showAll, showByTitle, updateAll } from './api'
@@ -28,16 +28,16 @@ export default function App() {
   const [repoList, setList] = useState([ ])
 
   useEffect(() => {
-    showAll()
+    showAllRepos()
   }, [])
 
-  const showAll = () => {
+  const showAllRepos = () => {
     if(!dataLoading) {
       setLoading(true)
     }
     showAll('/api/getRepos').then(res => {
-      if(res.length > 0) {
-        setList(res)
+      if(res.data.length > 0) {
+        setList(res.data)
       }
     }).finally(() => setLoading(false))
   }
@@ -47,10 +47,12 @@ export default function App() {
       setLoading(true)
     }
     showByTitle('/api/getRepoByTitle', { title: repoName }).then(res => {
-      if(res) {
-        setList([res])
+      if(res.data) {
+        setList([res.data])
       }
-    }).finally(() => setLoading(false))
+    })
+    .catch(() => setList([]))
+    .finally(() => setLoading(false))
   }
 
   const updateRepos = () => {
@@ -59,10 +61,9 @@ export default function App() {
       .catch(() => alert('Error'))
   }
 
-  console.log('repo list', repoList)
   return <Container>
     <IteractionContainer>
-      <Button color="#1BE351" onClick={showAll}>Show all</Button>
+      <Button color="#1BE351" onClick={showAllRepos}>Show all</Button>
       <SearchRepo onSubmit={(name) => searchRepo(name)} color="#FAD30B"></SearchRepo>
       <Button color="#4DBCF4" onClick={updateRepos}>Update all</Button>
     </IteractionContainer>

@@ -32,9 +32,15 @@ defmodule GithubParser.Workers.Repos do
     end
   end
 
-  def handle_call(:force_update, _from, %{timer: timer}) do
-    Process.cancel_timer(timer)
-    {:reply, :ok, %{timer: send_after(0)}}
+  def handle_call(:force_update, _from, %{timer: timer} = state) do
+    case Process.cancel_timer(timer, async: true) do
+      :ok ->
+        {:reply, :ok, %{timer: send_after(0)}}
+
+      error ->
+        Logger.error("cancel timer failed. details: #{inspect(error)}")
+        {:reply, :error, state}
+    end
   end
 
   def force_update(), do: GenServer.call(__MODULE__, :force_update)

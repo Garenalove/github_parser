@@ -79,7 +79,7 @@ export default ({
         <StyledTitle href={url}>{title}</StyledTitle>
         <StyledDesc>{description}</StyledDesc>
         <NoteContainer>
-            <LanguageText color={language_color}>{language}</LanguageText>
+            <LanguageText color={"#" + language_color}>{language}</LanguageText>
             <StyledRepoContent>{stars} stars</StyledRepoContent>
             <StyledRepoContent>{daily_stars} stars of last day</StyledRepoContent>
             <StyledRepoContent>{forks} forks</StyledRepoContent>
