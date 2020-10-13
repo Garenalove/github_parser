@@ -11,4 +11,8 @@ config :github_parser, GithubParser.Repo,
 
 config :github_parser, GithubParserWeb.Endpoint,
   http: [port: 4000],
-  server: true
+  server: true,
+  code_reloader: false
+
+config :logger, :console,
+  level: :info
