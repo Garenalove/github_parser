@@ -115,9 +115,9 @@ defmodule GithubParser.Workers.Repos do
       {:ok, _} ->
         Logger.info("repos successfully updated")
         {:noreply, send_after()}
-      {:error, reason} ->
-        Logger.error("error for the update db process. reason: #{inspect(reason)}")
-        {:stop, reason, []}
+      error ->
+        Logger.error("error for the update db process. reason: #{inspect(error)}")
+        {:stop, error, []}
     end
   end
 

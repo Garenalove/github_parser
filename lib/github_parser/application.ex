@@ -11,8 +11,7 @@ defmodule GithubParser.Application do
       GithubParserWeb.Telemetry,
       {Phoenix.PubSub, name: GithubParser.PubSub},
       GithubParserWeb.Endpoint,
-      {GithubParser.Workers.Repos, []}
-    ]
+    ] ++ repos_worker()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -25,5 +24,13 @@ defmodule GithubParser.Application do
   def config_change(changed, _new, removed) do
     GithubParserWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  def repos_worker() do
+    if unquote(Mix.env != :test) do
+      [{GithubParser.Workers.Repos, []}]
+    else
+      []
+    end
   end
 end
