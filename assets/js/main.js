@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from 'styled-components';
 import { RepoInfo, SearchRepo, Button } from './components'
-import { showAll, showByTitle, updateAll } from './api'
+import { showAll, showBy, updateAll } from './api'
 
 const Container = styled.div`
   display: flex;
@@ -42,11 +42,11 @@ export default function App() {
     }).finally(() => setLoading(false))
   }
 
-  const searchRepo = (repoName) => {
+  const searchRepo = (repoQuery) => {
     if(!dataLoading) {
       setLoading(true)
     }
-    showByTitle('/api/getRepoByTitle', { title: repoName }).then(res => {
+    showBy('/api/getRepoBy', { query: repoQuery }).then(res => {
       if(res.data) {
         setList([res.data])
       }
@@ -64,7 +64,7 @@ export default function App() {
   return <Container>
     <IteractionContainer>
       <Button color="#1BE351" onClick={showAllRepos}>Show all</Button>
-      <SearchRepo onSubmit={(name) => searchRepo(name)} color="#FAD30B"></SearchRepo>
+      <SearchRepo onSubmit={(query) => searchRepo(query)} color="#FAD30B"></SearchRepo>
       <Button color="#4DBCF4" onClick={updateRepos}>Update all</Button>
     </IteractionContainer>
     <ListContainer>

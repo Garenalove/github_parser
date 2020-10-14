@@ -1,7 +1,7 @@
 import { instance } from './localhost.instance'
 
-export default (url, { title }) => instance.get(url, {
+export default (url, { query }) => instance.get(url, {
     params: {
-        title
+        query
     }
 })

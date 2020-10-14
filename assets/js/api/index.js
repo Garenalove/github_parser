@@ -1,5 +1,5 @@
 import showAll from './showAll'
-import showByTitle from './showByTitle'
+import showBy from './showBy'
 import updateAll from './updateAll'
 
-export { showAll, showByTitle, updateAll }
+export { showAll, showBy, updateAll }
