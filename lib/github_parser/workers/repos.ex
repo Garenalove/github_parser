@@ -7,6 +7,7 @@ defmodule GithubParser.Workers.Repos do
   @url Application.fetch_env!(:github_parser, :trends) |> Keyword.get(:url)
   @options Application.fetch_env!(:github_parser, :trends) |> Keyword.get(:options)
   @update_interval Application.fetch_env!(:github_parser, :trends) |> Keyword.get(:update_interval)
+  @count Application.fetch_env!(:github_parser, :trends) |> Keyword.get(:count)
   @retry_interval 1000
 
   def start_link(_state) do
@@ -19,14 +20,17 @@ defmodule GithubParser.Workers.Repos do
 
   def handle_info(:update_repos, _state) do
     Logger.info("starting update repos")
-    case do_request() do
-      {:ok, repos} ->
-        repos
-        |> Enum.map(&convert_repo(&1))
-        |> add_titles()
+    case do_request(@url, headers(), @options ++ [params: list_query_params()]) do
+      {:ok, list} ->
+        Logger.info("repos successfully fetched")
+        list
+        |> parse_list()
+        |> get_repos()
+        |> add_ids()
         |> Repositories.update()
         |> process_result()
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.error("error in the repos fetching process. reason: #{inspect(reason)}")
         {:noreply, send_after(@retry_interval)}
     end
   end
@@ -48,35 +52,62 @@ defmodule GithubParser.Workers.Repos do
     Process.send_after(self(), :update_repos, interval)
   end
 
-  defp do_request() do
-    case HTTPoison.get(@url, [], @options) do
+  defp get_repos(list) do
+    list
+    |> Enum.map(&Task.async(fn -> do_request(&1, headers(), @options) end))
+    |> Enum.map(&Task.await(&1))
+    |> Enum.filter(fn{term, _} -> term == :ok end)
+    |> Enum.map(fn {:ok, body} -> Jason.decode!(body) end)
+    |> Enum.map(&convert_repo(&1))
+  end
+
+  defp do_request(url, headers, options) do
+    case HTTPoison.get(url, headers, options) do
       {:ok, %{status_code: 200, body: body}} ->
-        Logger.info("repos successfully fetched")
-        {:ok, Jason.decode!(body)}
+        {:ok, body}
+
+      {:ok, response} ->
+        {:error, response}
 
       {:error, reason} ->
-        Logger.error("error in the repos fetching process. reason: #{inspect(reason)}")
         {:error, reason}
     end
   end
 
-  defp convert_repo(repo) do
+  defp parse_list(response) do
+    response
+    |> Jason.decode!()
+    |> Map.get("items")
+    |> Enum.map(&Map.get(&1, "url"))
+  end
+
+
+  defp list_query_params() do
     %{
-      title: Map.get(repo, "title") |> String.replace(" ", ""),
-      description: Map.get(repo, "description"),
-      stars: Map.get(repo, "stars") |> String.replace(",", "") |> String.to_integer(),
-      daily_stars: Map.get(repo, "currentPeriodStar") |> String.replace(",", "") |> String.to_integer(),
-      forks: Map.get(repo, "forks") |> String.replace(",", "") |> String.to_integer(),
-      language: Map.get(repo, "language"),
-      language_color: Map.get(repo, "color"),
-      avatar_url: Map.get(repo, "avatar"),
-      url: Map.get(repo, "url")
+      q: "stars:>100",
+      sort: "stars",
+      order: "desc",
+      page: 1,
+      per_page: @count
     }
   end
 
-  defp add_titles(repos) do
-    titles = Enum.map(repos, fn(repo) -> Map.get(repo, :title) end)
-    {repos, titles}
+  defp convert_repo(repo) do
+    %{
+      id: Map.get(repo, "id"),
+      title: Map.get(repo, "name"),
+      description: Map.get(repo, "description"),
+      stars: Map.get(repo, "stargazers_count"),
+      forks: Map.get(repo, "forks"),
+      language: Map.get(repo, "language"),
+      avatar_url: Map.get(repo, "owner") |> Map.get("avatar_url"),
+      url: Map.get(repo, "html_url")
+    }
+  end
+
+  defp add_ids(repos) do
+    ids = Enum.map(repos, fn(repo) -> Map.get(repo, :id) end)
+    {repos, ids}
   end
 
   defp process_result(result) do
@@ -89,4 +120,9 @@ defmodule GithubParser.Workers.Repos do
         {:stop, reason, []}
     end
   end
+
+  defp headers() do
+    Application.fetch_env!(:github_parser, :trends) |> Keyword.get(:headers)
+  end
+
 end

@@ -23,7 +23,7 @@ defmodule GithubParserWeb.Router do
     pipe_through :api
 
     get "/getRepos", ReposController, :get_all
-    get "/getRepoByTitle", ReposController, :get_by_title
+    get "/getRepoBy", ReposController, :get_by
     post "/updateRepos", ReposController, :force_update
   end
 

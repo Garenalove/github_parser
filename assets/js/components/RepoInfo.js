@@ -64,24 +64,23 @@ const StyledAvatar = styled.div`
 `
 
 export default ({
+    id,
     avatar_url,
     title,
     description,
     url,
     stars,
-    daily_stars,
     forks,
     language,
-    language_color
     }) => {
     return <RepoInfoContainer>
         <StyledContent>
         <StyledTitle href={url}>{title}</StyledTitle>
         <StyledDesc>{description}</StyledDesc>
         <NoteContainer>
-            <LanguageText color={"#" + language_color}>{language}</LanguageText>
+            <LanguageText>{language}</LanguageText>
+            <StyledRepoContent>{id} id</StyledRepoContent>
             <StyledRepoContent>{stars} stars</StyledRepoContent>
-            <StyledRepoContent>{daily_stars} stars of last day</StyledRepoContent>
             <StyledRepoContent>{forks} forks</StyledRepoContent>
         </NoteContainer>
         </StyledContent>
