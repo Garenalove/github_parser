@@ -1,0 +1,44 @@
+#
+# builder container
+#
+FROM elixir:1.10 as builder
+
+ENV MIX_ENV=staging
+
+WORKDIR /app
+
+COPY scripts scripts
+COPY config config
+COPY mix.exs mix.lock ./
+
+RUN mix local.hex --force && \
+    mix local.rebar --force
+
+RUN mix do deps.get, deps.compile
+
+COPY priv priv
+COPY lib lib
+
+RUN mix do phx.digest, compile, release
+
+#
+# app container
+#
+FROM debian:buster-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends locales curl && \
+    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 && \
+    apt clean
+
+WORKDIR /app
+
+RUN useradd -l github_parser
+RUN chown github_parser:github_parser /app
+USER github_parser:github_parser
+
+COPY --from=builder --chown=github_parser:github_parser /app/_build/staging/rel/github_parser ./
+COPY --from=builder --chown=github_parser:github_parser /app/scripts/run_release.sh ./
+
+ENV HOME=/app
+
+ENTRYPOINT ["bash", "./run_release.sh"]
