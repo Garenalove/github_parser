@@ -8,7 +8,12 @@ defmodule GithubParser.Repositories do
   def update({repos, ids}) do
     Multi.new()
     |> Multi.delete_all(:delete_old, from(r in Repository, where: r.id not in ^ids))
-    |> generate_insert(repos)
+    |> Multi.run(:get_exist, fn repo, _changes ->
+      {:ok, Enum.map(repos, &get_or_create(repo, &1))}
+    end)
+    |> Multi.run(:insert_or_update, fn repo, %{get_exist: repositores} ->
+      {:ok, Enum.map(repositores, &repo.insert_or_update(&1))}
+    end)
     |> Repo.transaction()
   end
 
@@ -41,10 +46,8 @@ defmodule GithubParser.Repositories do
     |> Enum.map(&Repository.to_storeable_map(&1))
   end
 
-  defp generate_insert(transaction, repos) do
-    repos
-    |> Enum.reduce(transaction, fn repo, transaction ->
-      Multi.insert(transaction, Map.get(repo, :id), Repository.changeset(%Repository{}, repo), on_conflict: :nothing)
-    end)
+  defp get_or_create(repo, repository) do
+    (repo.get(Repository, Map.get(repository, :id)) || %Repository{})
+    |> Repository.changeset(repository)
   end
 end
